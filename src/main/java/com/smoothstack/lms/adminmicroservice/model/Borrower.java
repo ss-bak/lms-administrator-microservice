@@ -1,17 +1,55 @@
 package com.smoothstack.lms.adminmicroservice.model;
 
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
+@Entity
+@Table(name = "tbl_borrower")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "cardNumber", scope = Borrower.class)
 public class Borrower {
-	private Integer cardNo;
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "cardNo")
+	private Long cardNumber;
+
+	@Column(name = "name")
 	private String name;
+
+	@Column(name = "address")
 	private String address;
+
+	@Column(name = "phone")
 	private String phone;
 
-	public Integer getCardNo() {
-		return cardNo;
+	@ManyToMany
+	@JoinTable(name = "tbl_book_loans", joinColumns = { @JoinColumn(name = "cardNo") }, inverseJoinColumns = {
+			@JoinColumn(name = "branchId") })
+	private List<LibraryBranch> libraryBranches;
+
+	@ManyToMany
+	@JoinTable(name = "tbl_book_loans", joinColumns = { @JoinColumn(name = "cardNo") }, inverseJoinColumns = {
+			@JoinColumn(name = "bookId") })
+	private List<Book> books;
+
+	public Long getCardNumber() {
+		return cardNumber;
 	}
 
-	public void setCardNo(Integer cardNo) {
-		this.cardNo = cardNo;
+	public void setCardNumber(Long cardNumber) {
+		this.cardNumber = cardNumber;
 	}
 
 	public String getName() {
@@ -38,9 +76,20 @@ public class Borrower {
 		this.phone = phone;
 	}
 
-	@Override
-	public String toString() {
-		return "Borrower [cardNo=" + cardNo + ", name=" + name + ", address=" + address + ", phone=" + phone + "]";
+	public List<LibraryBranch> getLibraryBranches() {
+		return libraryBranches;
+	}
+
+	public void setLibraryBranches(List<LibraryBranch> libraryBranches) {
+		this.libraryBranches = libraryBranches;
+	}
+
+	public List<Book> getBooks() {
+		return books;
+	}
+
+	public void setBooks(List<Book> books) {
+		this.books = books;
 	}
 
 }

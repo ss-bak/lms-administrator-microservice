@@ -2,9 +2,11 @@ package com.smoothstack.lms.adminmicroservice.service;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smoothstack.lms.adminmicroservice.dao.AuthorDAO;
 import com.smoothstack.lms.adminmicroservice.dao.BookDAO;
@@ -15,419 +17,211 @@ import com.smoothstack.lms.adminmicroservice.dao.GenreDAO;
 import com.smoothstack.lms.adminmicroservice.dao.PublisherDAO;
 import com.smoothstack.lms.adminmicroservice.model.Author;
 import com.smoothstack.lms.adminmicroservice.model.Book;
+import com.smoothstack.lms.adminmicroservice.model.BookCopy;
+import com.smoothstack.lms.adminmicroservice.model.BookCopyId;
 import com.smoothstack.lms.adminmicroservice.model.Borrower;
-import com.smoothstack.lms.adminmicroservice.model.Branch;
-import com.smoothstack.lms.adminmicroservice.model.Copies;
 import com.smoothstack.lms.adminmicroservice.model.Genre;
+import com.smoothstack.lms.adminmicroservice.model.LibraryBranch;
 import com.smoothstack.lms.adminmicroservice.model.Publisher;
 
 @Service
 public class AdminService {
-	
+
 	@Autowired
 	AuthorDAO authorDao;
-	
+
 	@Autowired
 	BookDAO bookDao;
-	
+
 	@Autowired
 	GenreDAO genreDao;
-	
+
 	@Autowired
 	BorrowerDAO borrowerDao;
-	
+
 	@Autowired
 	BranchDAO branchDao;
-	
+
 	@Autowired
 	CopiesDAO copiesDao;
-	
+
 	@Autowired
 	PublisherDAO publisherDao;
-	
 
-	public void saveAuthor(Author auth) throws ClassNotFoundException, SQLException {
-		try {
-			auth.setAuthorId(authorDao.addAuthor(auth));
-			for (Book bk : auth.getBooks())
-				authorDao.insertBookAuthors(auth, bk);
-			authorDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not save author");
-			throw e;
-		}
+	@Transactional
+	public void saveAuthor(Author auth) throws SQLException {
+		authorDao.save(auth);
 	}
 
-	public void updateAuthor(Author auth) throws ClassNotFoundException, SQLException {
-		try {
-			authorDao.updateAuthor(auth);
-			authorDao.deleteBookAuthors(auth);
-			for (Book bk : auth.getBooks())
-				authorDao.insertBookAuthors(auth, bk);
-			authorDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not update author");
-			throw e;
-		}
+	@Transactional
+	public void updateAuthor(Author auth) throws SQLException {
+		if (authorDao.existsById(auth.getId()))
+			authorDao.save(auth);
 	}
 
-	public void deleteAuthor(Author auth) throws ClassNotFoundException, SQLException {
-		try {
-			authorDao.deleteAuthor(auth);
-			authorDao.deleteBookAuthors(auth);
-			for (Book book : auth.getBooks())
-				bookDao.deleteBook(book);
-			bookDao.commit();
-			authorDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not delete author");
-			throw e;
-		}
+	@Transactional
+	public void deleteAuthor(Author auth) throws SQLException {
+		if (authorDao.existsById(auth.getId()))
+			authorDao.delete(auth);
 	}
 
-	public List<Author> readAuthor() throws ClassNotFoundException, SQLException {
-		try {
-			return authorDao.readAuthors();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read author");
-			throw e;
-		}
+	public List<Author> readAuthor() throws SQLException {
+		return authorDao.findAll();
 	}
 
-	public Author readAuthorById(Integer authorId) throws ClassNotFoundException, SQLException {
-		try {
-			return authorDao.readAuthorById(authorId);
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read author");
-			e.printStackTrace();
-			throw e;
-		}
+	public Optional<Author> readAuthorById(Long authorId) throws SQLException {
+		return authorDao.findById(authorId);
 	}
 
-	public void saveBook(Book book) throws ClassNotFoundException, SQLException {
-		try {
-			book.setBookId(bookDao.addBook(book));
-			for (Author aut : book.getAuthors())
-				bookDao.insertBookAuthors(aut, book);
-			for (Genre gen : book.getGenres())
-				bookDao.insertBookGenres(gen, book);
-			bookDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not save book");
-			throw e;
-		}
+	@Transactional
+	public void saveBook(Book book) throws SQLException {
+		bookDao.save(book);
 	}
 
-	public void updateBook(Book book) throws ClassNotFoundException, SQLException {
-		try {
-			bookDao.updateBook(book);
-			bookDao.deleteBookAuthors(book);
-			bookDao.deleteBookGenres(book);
-			for (Author auth : book.getAuthors())
-				bookDao.insertBookAuthors(auth, book);
-			for (Genre gen : book.getGenres())
-				bookDao.insertBookGenres(gen, book);
-			bookDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not update book");
-			throw e;
-		}
+	@Transactional
+	public void updateBook(Book book) throws SQLException {
+		if (bookDao.existsById(book.getId()))
+			bookDao.save(book);
 	}
 
-	public void deleteBook(Book book) throws ClassNotFoundException, SQLException {
-		try {
-			bookDao.deleteBook(book);
-			bookDao.deleteBookAuthors(book);
-			bookDao.deleteBookGenres(book);
-			copiesDao.deleteCopiesByBookId(book.getBookId());
-			bookDao.commit();
-			copiesDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not delete book");
-			throw e;
-		}
+	@Transactional
+	public void deleteBook(Book book) throws SQLException {
+		if (bookDao.existsById(book.getId()))
+			bookDao.delete(book);
 	}
 
-	public List<Book> readBook() throws ClassNotFoundException, SQLException {
-		try {
-			return bookDao.readBooks();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read book");
-			throw e;
-		}
+	public List<Book> readBook() throws SQLException {
+		return bookDao.findAll();
 	}
 
-	public Book readBookById(Integer bookId) throws ClassNotFoundException, SQLException {
-		try {
-			return bookDao.readBookById(bookId);
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read book");
-			e.printStackTrace();
-			throw e;
-		}
+	public Optional<Book> readBookById(Long bookId) throws SQLException {
+		return bookDao.findById(bookId);
 	}
 
-	public void saveGenre(Genre gen) throws ClassNotFoundException, SQLException {
-		try {
-			gen.setGenreId(genreDao.addGenre(gen));
-			for (Book bk : gen.getBooks())
-				genreDao.insertBookGenres(gen, bk);
-			genreDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not create genre");
-			throw e;
-		}
+	@Transactional
+	public void saveGenre(Genre gen) throws SQLException {
+		genreDao.save(gen);
 	}
 
-	public void updateGenre(Genre gen) throws ClassNotFoundException, SQLException {
-		try {
-			genreDao.updateGenre(gen);
-			genreDao.deleteBookGenres(gen);
-			for (Book book : gen.getBooks())
-				genreDao.insertBookGenres(gen, book);
-			genreDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not update genre");
-			throw e;
-		}
+	@Transactional
+	public void updateGenre(Genre gen) throws SQLException {
+		if (genreDao.existsById(gen.getId()))
+			genreDao.save(gen);
 	}
 
-	public void deleteGenre(Genre gen) throws ClassNotFoundException, SQLException {
-		try {
-			genreDao.deleteGenre(gen);
-			genreDao.deleteBookGenres(gen);
-			genreDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not delete genre");
-			throw e;
-		}
+	@Transactional
+	public void deleteGenre(Genre gen) throws SQLException {
+		if (genreDao.existsById(gen.getId()))
+			genreDao.delete(gen);
 	}
 
-	public List<Genre> readGenre() throws ClassNotFoundException, SQLException {
-		try {
-			return genreDao.readGenre();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read genre");
-			throw e;
-		}
+	public List<Genre> readGenre() throws SQLException {
+		return genreDao.findAll();
 	}
 
-	public Genre readGenreById(Integer genreId) throws ClassNotFoundException, SQLException {
-		try {
-			return genreDao.readGenreById(genreId);
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read genre");
-			e.printStackTrace();
-			throw e;
-		}
+	public Optional<Genre> readGenreById(Long genreId) throws SQLException {
+		return genreDao.findById(genreId);
 	}
 
-	public void saveBorrower(Borrower bor) throws ClassNotFoundException, SQLException {
-		try {
-			bor.setCardNo(borrowerDao.addBorrower(bor));
-			borrowerDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not save borrower");
-			throw e;
-		}
+	@Transactional
+	public void saveBorrower(Borrower bor) throws SQLException {
+		borrowerDao.save(bor);
 	}
 
-	public void updateBorrower(Borrower bor) throws ClassNotFoundException, SQLException {
-		try {
-			borrowerDao.updateBorrower(bor);
-			borrowerDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not update borrower");
-			throw e;
-		}
+	@Transactional
+	public void updateBorrower(Borrower bor) throws SQLException {
+		if (borrowerDao.existsById(bor.getCardNumber()))
+			borrowerDao.save(bor);
 	}
 
-	public void deleteBorrower(Borrower bor) throws ClassNotFoundException, SQLException {
-		try {
-			borrowerDao.deleteBorrower(bor);
-			borrowerDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not delete borrower");
-			throw e;
-		}
+	@Transactional
+	public void deleteBorrower(Borrower bor) throws SQLException {
+		if (borrowerDao.existsById(bor.getCardNumber()))
+			borrowerDao.delete(bor);
 	}
 
-	public List<Borrower> readBorrower() throws ClassNotFoundException, SQLException {
-		try {
-			return borrowerDao.readBorrower();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read borrower");
-			throw e;
-		}
+	public List<Borrower> readBorrower() throws SQLException {
+		return borrowerDao.findAll();
 	}
 
-	public Borrower readBorrowerById(Integer cardNo) throws ClassNotFoundException, SQLException {
-		try {
-			return borrowerDao.readBorrowerById(cardNo);
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read borrower");
-			e.printStackTrace();
-			throw e;
-		}
+	public Optional<Borrower> readBorrowerById(Long cardNo) throws SQLException {
+		return borrowerDao.findById(cardNo);
 	}
 
-	public void saveBranch(Branch brch) throws ClassNotFoundException, SQLException {
-		try {
-			brch.setBranchId(branchDao.addBranch(brch));
-			branchDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not create branch");
-			throw e;
-		}
+	@Transactional
+	public void saveBranch(LibraryBranch brch) throws SQLException {
+		branchDao.save(brch);
 	}
 
-	public void updateBranch(Branch brch) throws ClassNotFoundException, SQLException {
-		try {
-			branchDao.updateBranch(brch);
-			branchDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not update branch");
-			throw e;
-		}
+	@Transactional
+	public void updateBranch(LibraryBranch brch) throws SQLException {
+		if (branchDao.existsById(brch.getId()))
+			branchDao.save(brch);
 	}
 
-	public void deleteBranch(Branch brch) throws ClassNotFoundException, SQLException {
-		try {
-			branchDao.deleteBranch(brch);
-			branchDao.deleteBranchCopies(brch);
-			branchDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not delete branch");
-			throw e;
-		}
+	@Transactional
+	public void deleteBranch(LibraryBranch brch) throws SQLException {
+		if (branchDao.existsById(brch.getId()))
+			branchDao.delete(brch);
 	}
 
-	public List<Branch> readBranch() throws ClassNotFoundException, SQLException {
-		try {
-			return branchDao.readBranch();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read branch");
-			throw e;
-		}
+	public List<LibraryBranch> readBranch() throws SQLException {
+		return branchDao.findAll();
 	}
 
-	public Branch readBranchById(Integer branchId) throws ClassNotFoundException, SQLException {
-		try {
-			return branchDao.readBranchById(branchId);
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read branch");
-			e.printStackTrace();
-			throw e;
-		}
+	public Optional<LibraryBranch> readBranchById(Long branchId) throws SQLException {
+		return branchDao.findById(branchId);
 	}
 
-	public void saveCopies(Copies copy) throws ClassNotFoundException, SQLException {
-		try {
-			copiesDao.addCopies(copy);
-			copiesDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			e.printStackTrace();
-			System.out.println("Could not create copies");
-			throw e;
-		}
+	@Transactional
+	public void saveCopies(BookCopy copy) throws SQLException {
+		copiesDao.save(copy);
 	}
 
-	public void updateCopies(Copies copy) throws ClassNotFoundException, SQLException {
-		try {
-			copiesDao.updateCopies(copy);
-			copiesDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not update copies");
-			throw e;
-		}
+	@Transactional
+	public void updateCopies(BookCopy copy) throws SQLException {
+		if (copiesDao.existsById(copy.getId()))
+			copiesDao.save(copy);
 	}
 
-	public void deleteCopies(Copies copy) throws ClassNotFoundException, SQLException {
-		try {
-			copiesDao.deleteCopies(copy);
-			copiesDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not delete copies");
-			throw e;
-		}
+	@Transactional
+	public void deleteCopies(BookCopy copy) throws SQLException {
+		if (copiesDao.existsById(copy.getId()))
+			copiesDao.delete(copy);
 	}
 
-	public List<Copies> readCopies() throws ClassNotFoundException, SQLException {
-		try {
-			return copiesDao.readCopies();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read copies");
-			throw e;
-		}
+	public List<BookCopy> readCopies() throws SQLException {
+		return copiesDao.findAll();
 	}
 
-	public List<Copies> readCopiesById(Integer branchId) throws ClassNotFoundException, SQLException {
-		try {
-			return copiesDao.readCopyById(branchId);
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read copies");
-			throw e;
-		}
+	public Optional<BookCopy> readCopyById(Long branchId, Long bookId) throws SQLException {
+		BookCopyId bookCopyId = new BookCopyId(bookId, branchId);
+		return copiesDao.findById(bookCopyId);
 	}
 
-	public Copies readCopyById(Integer branchId, Integer bookId) throws ClassNotFoundException, SQLException {
-		try {
-			return copiesDao.readCopyById(branchId, bookId).get(0);
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read copies");
-			throw e;
-		}
+	@Transactional
+	public void savePublisher(Publisher pub) throws SQLException {
+		publisherDao.save(pub);
 	}
 
-	public void savePublisher(Publisher pub) throws ClassNotFoundException, SQLException {
-		try {
-			pub.setPublisherId(publisherDao.addPublisher(pub));
-			publisherDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not creat publisher");
-			throw e;
-		}
+	@Transactional
+	public void updatePublisher(Publisher pub) throws SQLException {
+		if (publisherDao.existsById(pub.getId()))
+			publisherDao.save(pub);
 	}
 
-	public void updatePublisher(Publisher pub) throws ClassNotFoundException, SQLException {
-		try {
-			publisherDao.updatePublisher(pub);
-			publisherDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not update publisher");
-			throw e;
-		}
+	@Transactional
+	public void deletePublisher(Publisher pub) throws SQLException {
+		if (publisherDao.existsById(pub.getId()))
+			publisherDao.delete(pub);
 	}
 
-	public void deletePublisher(Publisher pub) throws ClassNotFoundException, SQLException {
-		try {
-			publisherDao.deletePublisher(pub);
-			publisherDao.deletePublisherBooks(pub);
-			publisherDao.commit();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not delete publisher");
-			throw e;
-		}
+	public List<Publisher> readPublisher() throws SQLException {
+		return publisherDao.findAll();
 	}
 
-	public List<Publisher> readPublisher() throws ClassNotFoundException, SQLException {
-		try {
-			PublisherDAO publisherDao = new PublisherDAO();
-			return publisherDao.readPublisher();
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read publisher");
-			throw e;
-		}
-	}
-
-	public Publisher readPublisherById(Integer publisherId) throws ClassNotFoundException, SQLException {
-		try {
-			return publisherDao.readPublisherById(publisherId);
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("Could not read publisher");
-			e.printStackTrace();
-			throw e;
-		}
+	public Optional<Publisher> readPublisherById(Long publisherId) throws SQLException {
+		return publisherDao.findById(publisherId);
 	}
 
 }

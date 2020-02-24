@@ -2,25 +2,51 @@ package com.smoothstack.lms.adminmicroservice.model;
 
 import java.util.List;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
+@Entity
+@Table(name = "tbl_author")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", scope = Author.class)
 public class Author {
-	private Integer authorId;
-	private String authorName;
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "authorId")
+	private Long id;
+
+	@Column(name = "authorName")
+	private String name;
+
+	@ManyToMany
+	@JoinTable(name = "tbl_book_authors", joinColumns = { @JoinColumn(name = "authorId") }, inverseJoinColumns = {
+			@JoinColumn(name = "bookId") })
 	private List<Book> books;
 
-	public Integer getAuthorId() {
-		return authorId;
+	public Long getId() {
+		return id;
 	}
 
-	public void setAuthorId(Integer authorId) {
-		this.authorId = authorId;
+	public void setId(Long id) {
+		this.id = id;
 	}
 
-	public String getAuthorName() {
-		return authorName;
+	public String getName() {
+		return name;
 	}
 
-	public void setAuthorName(String authorName) {
-		this.authorName = authorName;
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public List<Book> getBooks() {
@@ -29,11 +55,6 @@ public class Author {
 
 	public void setBooks(List<Book> books) {
 		this.books = books;
-	}
-
-	@Override
-	public String toString() {
-		return "Author [authorId=" + authorId + ", authorName=" + authorName + ", books=" + books + "]";
 	}
 
 }

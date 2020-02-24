@@ -7,10 +7,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.smoothstack.lms.adminmicroservice.model.Author;
 import com.smoothstack.lms.adminmicroservice.model.Book;
+import com.smoothstack.lms.adminmicroservice.model.BookCopy;
+import com.smoothstack.lms.adminmicroservice.model.BookCopyId;
 import com.smoothstack.lms.adminmicroservice.model.Borrower;
-import com.smoothstack.lms.adminmicroservice.model.Branch;
-import com.smoothstack.lms.adminmicroservice.model.Copies;
 import com.smoothstack.lms.adminmicroservice.model.Genre;
+import com.smoothstack.lms.adminmicroservice.model.LibraryBranch;
 import com.smoothstack.lms.adminmicroservice.model.Publisher;
 
 @SpringBootTest
@@ -19,11 +20,11 @@ class ModelTests {
 	@Test
 	void authorTest() {
 		Author author = new Author();
-		author.setAuthorId(0);
-		author.setAuthorName("");
+		author.setId(0L);
+		author.setName("");
 		author.setBooks(new ArrayList<Book>());
-		author.getAuthorId();
-		author.getAuthorName();
+		author.getId();
+		author.getName();
 		author.getBooks();
 		author.toString();
 	}
@@ -32,12 +33,12 @@ class ModelTests {
 	void bookTest() {
 		Book book = new Book();
 		book.setAuthors(new ArrayList<Author>());
-		book.setBookId(0);
+		book.setId(0L);
 		book.setGenres(new ArrayList<Genre>());
 		book.setPublisher(new Publisher());
 		book.setTitle("");
 		book.getAuthors();
-		book.getBookId();
+		book.getId();
 		book.getGenres();
 		book.getPublisher();
 		book.getTitle();
@@ -48,11 +49,11 @@ class ModelTests {
 	void borrowerTest() {
 		Borrower borrower = new Borrower();
 		borrower.setAddress("");
-		borrower.setCardNo(0);
+		borrower.setCardNumber(0L);
 		borrower.setName("");
 		borrower.setPhone("");
 		borrower.getAddress();
-		borrower.getCardNo();
+		borrower.getCardNumber();
 		borrower.getName();
 		borrower.getPhone();
 		borrower.toString();
@@ -60,25 +61,24 @@ class ModelTests {
 
 	@Test
 	void branchTest() {
-		Branch branch = new Branch();
-		branch.setBranchAddress("");
-		branch.setBranchId(0);
-		branch.setBranchName("");
-		branch.getBranchAddress();
-		branch.getBranchId();
-		branch.getBranchName();
+		LibraryBranch branch = new LibraryBranch();
+		branch.setAddress("");
+		branch.setId(0L);
+		branch.setName("");
+		branch.getAddress();
+		branch.getId();
+		branch.getName();
 		branch.toString();
 	}
 
 	@Test
 	void copiesTest() {
-		Copies copy = new Copies();
-		copy.setBookId(0);
-		copy.setBranchId(0);
-		copy.setNoOfCopies(0);
-		copy.getBookId();
-		copy.getBranchId();
-		copy.getNoOfCopies();
+		BookCopy copy = new BookCopy();
+		copy.setId(new BookCopyId(0L, 0L));
+		copy.setAmount(0);
+		copy.getId();
+		copy.getId();
+		copy.getAmount();
 		copy.toString();
 	}
 
@@ -86,25 +86,25 @@ class ModelTests {
 	void genreTest() {
 		Genre genre = new Genre();
 		genre.setBooks(new ArrayList<Book>());
-		genre.setGenreId(0);
-		genre.setGenreName("");
+		genre.setId(0L);
+		genre.setName("");
 		genre.getBooks();
-		genre.getGenreId();
-		genre.getGenreName();
+		genre.getId();
+		genre.getName();
 		genre.toString();
 	}
 
 	@Test
 	void publisherTest() {
 		Publisher publisher = new Publisher();
-		publisher.setPublisherAddress("");
-		publisher.setPublisherId(0);
-		publisher.setPublisherName("");
-		publisher.setPublisherPhone("");
-		publisher.getPublisherAddress();
-		publisher.getPublisherId();
-		publisher.getPublisherName();
-		publisher.getPublisherPhone();
+		publisher.setAddress("");
+		publisher.setId(0L);
+		publisher.setName("");
+		publisher.setPhone("");
+		publisher.getAddress();
+		publisher.getId();
+		publisher.getName();
+		publisher.getPhone();
 		publisher.toString();
 	}
 }

@@ -1,47 +1,78 @@
 package com.smoothstack.lms.adminmicroservice.model;
 
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
+@Entity
+@Table(name = "tbl_publisher")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", scope = Publisher.class)
 public class Publisher {
-	private Integer publisherId;
-	private String publisherName;
-	private String publisherAddress;
-	private String publisherPhone;
 
-	public Integer getPublisherId() {
-		return publisherId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "publisherId")
+	private Long id;
+
+	@Column(name = "publisherName")
+	private String name;
+
+	@Column(name = "publisherAddress")
+	private String address;
+
+	@Column(name = "publisherPhone")
+	private String phone;
+
+	@OneToMany(mappedBy = "publisher")
+	private List<Book> books;
+
+	public Long getId() {
+		return id;
 	}
 
-	public void setPublisherId(Integer publisherId) {
-		this.publisherId = publisherId;
+	public void setId(Long id) {
+		this.id = id;
 	}
 
-	public String getPublisherName() {
-		return publisherName;
+	public String getName() {
+		return name;
 	}
 
-	public void setPublisherName(String publisherName) {
-		this.publisherName = publisherName;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public String getPublisherAddress() {
-		return publisherAddress;
+	public String getAddress() {
+		return address;
 	}
 
-	public void setPublisherAddress(String publisherAddress) {
-		this.publisherAddress = publisherAddress;
+	public void setAddress(String address) {
+		this.address = address;
 	}
 
-	public String getPublisherPhone() {
-		return publisherPhone;
+	public String getPhone() {
+		return phone;
 	}
 
-	public void setPublisherPhone(String publisherPhone) {
-		this.publisherPhone = publisherPhone;
+	public void setPhone(String phone) {
+		this.phone = phone;
 	}
 
-	@Override
-	public String toString() {
-		return "Publisher [publisherId=" + publisherId + ", publisherName=" + publisherName + ", publisherAddress="
-				+ publisherAddress + ", publisherPhone=" + publisherPhone + "]";
+	public List<Book> getBooks() {
+		return books;
 	}
-	
+
+	public void setBooks(List<Book> books) {
+		this.books = books;
+	}
+
 }

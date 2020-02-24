@@ -2,25 +2,51 @@ package com.smoothstack.lms.adminmicroservice.model;
 
 import java.util.List;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
+@Entity
+@Table(name = "tbl_genre")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", scope = Genre.class)
 public class Genre {
-	private Integer genreId;
-	private String genreName;
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "genre_id")
+	private Long id;
+
+	@Column(name = "genre_name")
+	private String name;
+
+	@ManyToMany
+	@JoinTable(name = "tbl_book_genres", joinColumns = { @JoinColumn(name = "genre_id") }, inverseJoinColumns = {
+			@JoinColumn(name = "bookId") })
 	private List<Book> books;
 
-	public Integer getGenreId() {
-		return genreId;
+	public Long getId() {
+		return id;
 	}
 
-	public void setGenreId(Integer genreId) {
-		this.genreId = genreId;
+	public void setId(Long id) {
+		this.id = id;
 	}
 
-	public String getGenreName() {
-		return genreName;
+	public String getName() {
+		return name;
 	}
 
-	public void setGenreName(String genreName) {
-		this.genreName = genreName;
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public List<Book> getBooks() {
@@ -31,9 +57,4 @@ public class Genre {
 		this.books = books;
 	}
 
-	@Override
-	public String toString() {
-		return "Genre [genreId=" + genreId + ", genreName=" + genreName + ", books=" + books + "]";
-	}
-	
 }
