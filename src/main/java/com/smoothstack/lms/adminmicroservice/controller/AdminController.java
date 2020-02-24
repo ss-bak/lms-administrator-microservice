@@ -52,7 +52,7 @@ public class AdminController {
 	@Autowired
 	Environment environment;
 
-	@GetMapping(path = "/librarian/port")
+	@GetMapping(path = "/administrator/port")
 	public String port() {
 		return environment.getProperty("local.server.port");
 	}
