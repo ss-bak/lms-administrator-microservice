@@ -73,7 +73,7 @@ public class AdminController {
 	public ResponseEntity<Book> getBook(@PathVariable Long id) {
 		try {
 			Optional<Book> book = adminService.readBookById(id);
-			if (book.isEmpty())
+			if (!book.isPresent())
 				return new ResponseEntity<Book>(HttpStatus.NOT_FOUND);
 			return new ResponseEntity<Book>(book.get(), HttpStatus.OK);
 		} catch (Exception e) {
@@ -120,7 +120,7 @@ public class AdminController {
 	public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
 		try {
 			Optional<Book> optBook = adminService.readBookById(id);
-			if (optBook.isEmpty())
+			if (!optBook.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			adminService.deleteBook(optBook.get());
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -147,7 +147,7 @@ public class AdminController {
 	public ResponseEntity<Author> getAuthor(@PathVariable Long id) {
 		try {
 			Optional<Author> author = adminService.readAuthorById(id);
-			if (author.isEmpty())
+			if (!author.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			return new ResponseEntity<Author>(author.get(), HttpStatus.OK);
 		} catch (Exception e) {
@@ -192,7 +192,7 @@ public class AdminController {
 	public ResponseEntity<Void> deleteAuthor(@PathVariable Long id) {
 		try {
 			Optional<Author> optAuthor = adminService.readAuthorById(id);
-			if (optAuthor.isEmpty())
+			if (!optAuthor.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			adminService.deleteAuthor(optAuthor.get());
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -219,7 +219,7 @@ public class AdminController {
 	public ResponseEntity<Genre> getGenre(@PathVariable Long id) {
 		try {
 			Optional<Genre> genre = adminService.readGenreById(id);
-			if (genre.isEmpty())
+			if (!genre.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			return new ResponseEntity<Genre>(genre.get(), HttpStatus.OK);
 		} catch (Exception e) {
@@ -264,7 +264,7 @@ public class AdminController {
 	public ResponseEntity<Void> deleteGenre(@PathVariable Long id) {
 		try {
 			Optional<Genre> optGenre = adminService.readGenreById(id);
-			if (optGenre.isEmpty())
+			if (!optGenre.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			adminService.deleteGenre(optGenre.get());
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -291,7 +291,7 @@ public class AdminController {
 	public ResponseEntity<Borrower> getBorrower(@PathVariable Long id) {
 		try {
 			Optional<Borrower> borrower = adminService.readBorrowerById(id);
-			if (borrower.isEmpty())
+			if (!borrower.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			return new ResponseEntity<Borrower>(borrower.get(), HttpStatus.OK);
 		} catch (Exception e) {
@@ -338,7 +338,7 @@ public class AdminController {
 	public ResponseEntity<Void> deleteBorrower(@PathVariable Long id) {
 		try {
 			Optional<Borrower> optBorrower = adminService.readBorrowerById(id);
-			if (optBorrower.isEmpty())
+			if (!optBorrower.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			adminService.deleteBorrower(optBorrower.get());
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -365,7 +365,7 @@ public class AdminController {
 	public ResponseEntity<LibraryBranch> getBranch(@PathVariable Long id) {
 		try {
 			Optional<LibraryBranch> branch = adminService.readBranchById(id);
-			if (branch.isEmpty())
+			if (!branch.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			return new ResponseEntity<LibraryBranch>(branch.get(), HttpStatus.OK);
 		} catch (Exception e) {
@@ -410,7 +410,7 @@ public class AdminController {
 	public ResponseEntity<Void> deleteLibraryBranch(@PathVariable Long id) {
 		try {
 			Optional<LibraryBranch> optBranch = adminService.readBranchById(id);
-			if (optBranch.isEmpty())
+			if (!optBranch.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			adminService.deleteBranch(optBranch.get());
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -435,7 +435,7 @@ public class AdminController {
 	public ResponseEntity<BookCopy> getCopy(@PathVariable Long branchId, @PathVariable Long bookId) {
 		try {
 			Optional<BookCopy> copies = adminService.readCopyById(branchId, bookId);
-			if (copies.isEmpty())
+			if (!copies.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			return new ResponseEntity<BookCopy>(copies.get(), HttpStatus.OK);
 		} catch (IndexOutOfBoundsException e) {
@@ -484,7 +484,7 @@ public class AdminController {
 	public ResponseEntity<Void> deleteBookCopy(@PathVariable Long branchId, @PathVariable Long bookId) {
 		try {
 			Optional<BookCopy> optBookCopy = adminService.readCopyById(branchId, bookId);
-			if (optBookCopy.isEmpty())
+			if (!optBookCopy.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			adminService.deleteCopies(optBookCopy.get());
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -509,7 +509,7 @@ public class AdminController {
 	public ResponseEntity<Publisher> getPublisher(@PathVariable Long id) {
 		try {
 			Optional<Publisher> publisher = adminService.readPublisherById(id);
-			if (publisher.isEmpty())
+			if (!publisher.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			return new ResponseEntity<Publisher>(publisher.get(), HttpStatus.OK);
 		} catch (IndexOutOfBoundsException e) {
@@ -558,7 +558,7 @@ public class AdminController {
 	public ResponseEntity<Void> deletePublisher(@PathVariable Long id) {
 		try {
 			Optional<Publisher> optPublisher = adminService.readPublisherById(id);
-			if (optPublisher.isEmpty())
+			if (!optPublisher.isPresent())
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			adminService.deletePublisher(optPublisher.get());
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
