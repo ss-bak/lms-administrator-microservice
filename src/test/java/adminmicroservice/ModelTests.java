@@ -5,14 +5,14 @@ import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.smoothstack.lms.adminmicroservice.model.Author;
-import com.smoothstack.lms.adminmicroservice.model.Book;
-import com.smoothstack.lms.adminmicroservice.model.BookCopy;
-import com.smoothstack.lms.adminmicroservice.model.BookCopyId;
-import com.smoothstack.lms.adminmicroservice.model.Borrower;
-import com.smoothstack.lms.adminmicroservice.model.Genre;
-import com.smoothstack.lms.adminmicroservice.model.LibraryBranch;
-import com.smoothstack.lms.adminmicroservice.model.Publisher;
+import com.smoothstack.lms.common.model.Author;
+import com.smoothstack.lms.common.model.Book;
+import com.smoothstack.lms.common.model.Copies;
+import com.smoothstack.lms.common.model.Borrower;
+import com.smoothstack.lms.common.model.Genre;
+import com.smoothstack.lms.common.model.Loans;
+import com.smoothstack.lms.common.model.Branch;
+import com.smoothstack.lms.common.model.Publisher;
 
 @SpringBootTest
 class ModelTests {
