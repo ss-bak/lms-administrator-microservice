@@ -27,6 +27,8 @@ import com.smoothstack.lms.adminmicroservice.service.CopiesService;
 import com.smoothstack.lms.adminmicroservice.service.GenreService;
 import com.smoothstack.lms.adminmicroservice.service.LoansService;
 import com.smoothstack.lms.adminmicroservice.service.PublisherService;
+import com.smoothstack.lms.common.exception.DependencyException;
+import com.smoothstack.lms.common.exception.RecordNotFoundException;
 import com.smoothstack.lms.common.model.Author;
 import com.smoothstack.lms.common.model.Book;
 import com.smoothstack.lms.common.model.Borrower;
@@ -62,10 +64,6 @@ public class AdminController {
 	@Autowired
 	BorrowerService borrowerService;
 
-//	URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(book.getId())
-//			.toUri();
-//	return ResponseEntity.created(location).build();
-
 	@GetMapping(path = "/administrator/books")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<List<Book>> getBooks() {
@@ -75,7 +73,11 @@ public class AdminController {
 	@GetMapping(path = "/administrator/books/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Book> getBook(@PathVariable Long id) {
-		return new ResponseEntity<Book>(bookService.findByIdOrThrow(id), HttpStatus.OK);
+		try {
+			return new ResponseEntity<Book>(bookService.findByIdOrThrow(id), HttpStatus.OK);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
 	}
 
 	@PostMapping(path = "administrator/books")
@@ -99,19 +101,25 @@ public class AdminController {
 	public ResponseEntity<Void> updateBook(@RequestBody Book book, @PathVariable Long id) {
 		if (!bookService.isValid(book))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-		int createdOrUpdated = bookService.update(book);
-		if (createdOrUpdated == 204)
-			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
-		else {
-			URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-					.buildAndExpand(book.getBookId()).toUri();
-			return ResponseEntity.created(location).build();
+		try {
+			bookService.update(book);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+				.buildAndExpand(book.getBookId()).toUri();
+		return ResponseEntity.created(location).build();
 	}
 
 	@DeleteMapping(path = "administrator/books/{id}")
 	public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
-		bookService.deleteById(id);
+		try {
+			bookService.delete(bookService.findByIdOrThrow(id));
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		} catch (DependencyException e) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
@@ -124,7 +132,11 @@ public class AdminController {
 	@GetMapping(path = "/administrator/authors/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Author> getAuthor(@PathVariable Long id) {
-		return new ResponseEntity<Author>(authorService.findByIdOrThrow(id), HttpStatus.OK);
+		try {
+			return new ResponseEntity<Author>(authorService.findByIdOrThrow(id), HttpStatus.OK);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
 	}
 
 	@PostMapping(path = "administrator/authors")
@@ -146,19 +158,25 @@ public class AdminController {
 	public ResponseEntity<Void> updateAuthor(@RequestBody Author author, @PathVariable Long id) {
 		if (!authorService.isValid(author))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-		int createdOrUpdated = authorService.update(author);
-		if (createdOrUpdated == 204)
-			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
-		else {
-			URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-					.buildAndExpand(author.getAuthorId()).toUri();
-			return ResponseEntity.created(location).build();
+		try {
+			authorService.update(author);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+				.buildAndExpand(author.getAuthorId()).toUri();
+		return ResponseEntity.created(location).build();
 	}
 
 	@DeleteMapping(path = "administrator/authors/{id}")
 	public ResponseEntity<Void> deleteAuthor(@PathVariable Long id) {
-		authorService.deleteById(id);
+		try {
+			authorService.delete(authorService.findByIdOrThrow(id));
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		} catch (DependencyException e) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
@@ -171,14 +189,16 @@ public class AdminController {
 	@GetMapping(path = "/administrator/borrowers/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Borrower> getBorrower(@PathVariable Long id) {
-		return new ResponseEntity<Borrower>(borrowerService.findByIdOrThrow(id), HttpStatus.OK);
+		try {
+			return new ResponseEntity<Borrower>(borrowerService.findByIdOrThrow(id), HttpStatus.OK);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
 	}
 
 	@PostMapping(path = "administrator/borrowers")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> saveBorrower(@RequestBody Borrower borrower) {
-		if (!borrowerService.isValid(borrower))
-			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		if (!borrowerService.isValid(borrower))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		borrowerService.save(borrower);
@@ -192,19 +212,25 @@ public class AdminController {
 	public ResponseEntity<Void> updateBorrower(@RequestBody Borrower borrower, @PathVariable Long id) {
 		if (!borrowerService.isValid(borrower))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-		int createdOrUpdated = borrowerService.update(borrower);
-		if (createdOrUpdated == 204)
-			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
-		else {
-			URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-					.buildAndExpand(borrower.getBorrowerId()).toUri();
-			return ResponseEntity.created(location).build();
+		try {
+			borrowerService.update(borrower);
+		} catch (Exception e) {
+			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+				.buildAndExpand(borrower.getBorrowerId()).toUri();
+		return ResponseEntity.created(location).build();
 	}
 
 	@DeleteMapping(path = "administrator/borrowers/{id}")
 	public ResponseEntity<Void> deleteBorrower(@PathVariable Long id) {
-		borrowerService.deleteById(id);
+		try {
+			borrowerService.delete(borrowerService.findByIdOrThrow(id));
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		} catch (DependencyException e) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
@@ -217,7 +243,11 @@ public class AdminController {
 	@GetMapping(path = "/administrator/branches/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Branch> getBranch(@PathVariable Long id) {
-		return new ResponseEntity<Branch>(branchService.findByIdOrThrow(id), HttpStatus.OK);
+		try {
+			return new ResponseEntity<Branch>(branchService.findByIdOrThrow(id), HttpStatus.OK);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
 	}
 
 	@PostMapping(path = "administrator/branches")
@@ -236,19 +266,25 @@ public class AdminController {
 	public ResponseEntity<Void> updateBranch(@RequestBody Branch branch, @PathVariable Long id) {
 		if (!branchService.isValid(branch))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-		int createdOrUpdated = branchService.update(branch);
-		if (createdOrUpdated == 204)
-			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
-		else {
-			URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-					.buildAndExpand(branch.getBranchId()).toUri();
-			return ResponseEntity.created(location).build();
+		try {
+			branchService.update(branch);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+				.buildAndExpand(branch.getBranchId()).toUri();
+		return ResponseEntity.created(location).build();
 	}
 
 	@DeleteMapping(path = "administrator/branches/{id}")
 	public ResponseEntity<Void> deleteBranch(@PathVariable Long id) {
-		branchService.deleteById(id);
+		try {
+			branchService.delete(branchService.findByIdOrThrow(id));
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		} catch (DependencyException e) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
@@ -261,7 +297,11 @@ public class AdminController {
 	@GetMapping(path = "/administrator/copies/BranchID/{branchId}/BookID/{bookId}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Copies> getCopies(@PathVariable Long branchId, @PathVariable Long bookId) {
-		return new ResponseEntity<Copies>(copiesService.findById(branchId, bookId).get(), HttpStatus.OK);
+		try {
+			return new ResponseEntity<Copies>(copiesService.findById(branchId, bookId).get(), HttpStatus.OK);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
 	}
 
 	@PostMapping(path = "administrator/copies")
@@ -280,19 +320,25 @@ public class AdminController {
 	public ResponseEntity<Void> updateCopies(@RequestBody Copies copies, @PathVariable Long id) {
 		if (!copiesService.isValid(copies))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-		int createdOrUpdated = copiesService.update(copies);
-		if (createdOrUpdated == 204)
-			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
-		else {
-			URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/BranchID/{branchId}/BookID/{bookId}")
-					.buildAndExpand(copies.getBranch().getBranchId(), copies.getBook().getBookId()).toUri();
-			return ResponseEntity.created(location).build();
+		try {
+			copiesService.update(copies);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/BranchID/{branchId}/BookID/{bookId}")
+				.buildAndExpand(copies.getBranch().getBranchId(), copies.getBook().getBookId()).toUri();
+		return ResponseEntity.created(location).build();
 	}
 
 	@DeleteMapping(path = "administrator/copies/BranchID/{branchId}/BookID/{bookId}")
 	public ResponseEntity<Void> deleteCopies(@PathVariable Long branchId, @PathVariable Long bookId) {
-		copiesService.deleteById(branchId, bookId);
+		try {
+			copiesService.delete(copiesService.findByIdOrThrow(bookId, branchId));
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		} catch (DependencyException e) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
@@ -305,7 +351,11 @@ public class AdminController {
 	@GetMapping(path = "/administrator/genres/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Genre> getGenre(@PathVariable Long id) {
-		return new ResponseEntity<Genre>(genreService.findByIdOrThrow(id), HttpStatus.OK);
+		try {
+			return new ResponseEntity<Genre>(genreService.findByIdOrThrow(id), HttpStatus.OK);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
 	}
 
 	@PostMapping(path = "administrator/genres")
@@ -324,19 +374,25 @@ public class AdminController {
 	public ResponseEntity<Void> updateGenre(@RequestBody Genre genre, @PathVariable Long id) {
 		if (!genreService.isValid(genre))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-		int createdOrUpdated = genreService.update(genre);
-		if (createdOrUpdated == 204)
-			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
-		else {
-			URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-					.buildAndExpand(genre.getGenreId()).toUri();
-			return ResponseEntity.created(location).build();
+		try {
+			genreService.update(genre);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+				.buildAndExpand(genre.getGenreId()).toUri();
+		return ResponseEntity.created(location).build();
 	}
 
 	@DeleteMapping(path = "administrator/genres/{id}")
 	public ResponseEntity<Void> deleteGenre(@PathVariable Long id) {
-		genreService.deleteById(id);
+		try {
+			genreService.delete(genreService.findByIdOrThrow(id));
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		} catch (DependencyException e) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
@@ -349,7 +405,11 @@ public class AdminController {
 	@GetMapping(path = "/administrator/publishers/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Publisher> getPublisher(@PathVariable Long id) {
-		return new ResponseEntity<Publisher>(publisherService.findByIdOrThrow(id), HttpStatus.OK);
+		try {
+			return new ResponseEntity<Publisher>(publisherService.findByIdOrThrow(id), HttpStatus.OK);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
 	}
 
 	@PostMapping(path = "administrator/publishers")
@@ -368,19 +428,25 @@ public class AdminController {
 	public ResponseEntity<Void> updatePublisher(@RequestBody Publisher publisher, @PathVariable Long id) {
 		if (!publisherService.isValid(publisher))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-		int createdOrUpdated = publisherService.update(publisher);
-		if (createdOrUpdated == 204)
-			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
-		else {
-			URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-					.buildAndExpand(publisher.getPublisherId()).toUri();
-			return ResponseEntity.created(location).build();
+		try {
+			publisherService.update(publisher);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+				.buildAndExpand(publisher.getPublisherId()).toUri();
+		return ResponseEntity.created(location).build();
 	}
 
 	@DeleteMapping(path = "administrator/publishers/{id}")
 	public ResponseEntity<Void> deletePublisher(@PathVariable Long id) {
-		publisherService.deleteById(id);
+		try {
+			publisherService.delete(publisherService.findByIdOrThrow(id));
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		} catch (DependencyException e) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 

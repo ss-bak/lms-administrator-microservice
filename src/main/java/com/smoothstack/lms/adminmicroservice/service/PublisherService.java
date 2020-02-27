@@ -12,29 +12,17 @@ public class PublisherService extends PublisherCommonService {
 	
 	@Transactional
 	public Publisher save(Publisher publisher) {
-		if (!beforeSave(publisher))
-			return publisher;
-		getJpaRepository().save(publisher);
-		afterSave(publisher);
-		return (publisher);
+		return super.save(publisher);
 	}
 	
 	@Transactional
-	public void deleteById(Long publisherId) {
-		if (!beforeDeleteById(publisherId))
-			return;
-		getJpaRepository().deleteById(publisherId);
-		afterDeleteById(publisherId);
+	public void delete(Publisher publisher) {
+		super.delete(publisher);
 	}
 	
 	@Transactional
-	public int update(Publisher publisher) {
-		int createdOrUpdated = 0;
-		if (findById(publisher.getPublisherId()).isPresent())
-			createdOrUpdated = 204;
-		else
-			createdOrUpdated = 201;
-		save(publisher);
-		return createdOrUpdated;
+	public Publisher update(Publisher publisher) {
+		findByIdOrThrow(publisher.getPublisherId());
+		return super.save(publisher);
 	}
 }

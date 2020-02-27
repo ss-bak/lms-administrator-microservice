@@ -12,29 +12,17 @@ public class LoansService extends LoansCommonService {
 	
 	@Transactional
 	public Loans save(Loans loans) {
-		if (!beforeSave(loans))
-			return loans;
-		getJpaRepository().save(loans);
-		afterSave(loans);
-		return (loans);
+		return super.save(loans);
 	}
 	
 	@Transactional
-	public void deleteById(Long loansId) {
-		if (!beforeDeleteById(loansId))
-			return;
-		getJpaRepository().deleteById(loansId);
-		afterDeleteById(loansId);
+	public void delete(Loans loans) {
+		super.delete(loans);
 	}
 	
 	@Transactional
-	public int update(Loans loans) {
-		int createdOrUpdated = 0;
-		if (findById(loans.getTransactionId()).isPresent())
-			createdOrUpdated = 204;
-		else
-			createdOrUpdated = 201;
-		save(loans);
-		return createdOrUpdated;
+	public Loans update(Loans loans) {
+		findByIdOrThrow(loans.getTransactionId());
+		return super.save(loans);
 	}
 }

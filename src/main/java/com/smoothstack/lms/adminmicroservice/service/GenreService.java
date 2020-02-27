@@ -12,29 +12,17 @@ public class GenreService extends GenreCommonService {
 	
 	@Transactional
 	public Genre save(Genre genre) {
-		if (!beforeSave(genre))
-			return genre;
-		getJpaRepository().save(genre);
-		afterSave(genre);
-		return (genre);
+		return super.save(genre);
 	}
 	
 	@Transactional
-	public void deleteById(Long genreId) {
-		if (!beforeDeleteById(genreId))
-			return;
-		getJpaRepository().deleteById(genreId);
-		afterDeleteById(genreId);
+	public void delete(Genre genre) {
+		super.delete(genre);
 	}
 	
 	@Transactional
-	public int update(Genre genre) {
-		int createdOrUpdated = 0;
-		if (findById(genre.getGenreId()).isPresent())
-			createdOrUpdated = 204;
-		else
-			createdOrUpdated = 201;
-		save(genre);
-		return createdOrUpdated;
+	public Genre update(Genre genre) {
+		findByIdOrThrow(genre.getGenreId());
+		return super.save(genre);
 	}
 }

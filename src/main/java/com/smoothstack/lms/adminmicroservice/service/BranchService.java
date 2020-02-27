@@ -12,29 +12,17 @@ public class BranchService extends BranchCommonService {
 	
 	@Transactional
 	public Branch save(Branch branch) {
-		if (!beforeSave(branch))
-			return branch;
-		getJpaRepository().save(branch);
-		afterSave(branch);
-		return (branch);
-	}
-
-	@Transactional
-	public void deleteById(Long branchId) {
-		if (!beforeDeleteById(branchId))
-			return;
-		getJpaRepository().deleteById(branchId);
-		afterDeleteById(branchId);
+		return super.save(branch);
 	}
 	
 	@Transactional
-	public int update(Branch branch) {
-		int createdOrUpdated = 0;
-		if (findById(branch.getBranchId()).isPresent())
-			createdOrUpdated = 204;
-		else
-			createdOrUpdated = 201;
-		save(branch);
-		return createdOrUpdated;
+	public void delete(Branch branch) {
+		super.delete(branch);
+	}
+	
+	@Transactional
+	public Branch update(Branch branch) {
+		findByIdOrThrow(branch.getBranchId());
+		return super.save(branch);
 	}
 }

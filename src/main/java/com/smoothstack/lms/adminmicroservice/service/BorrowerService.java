@@ -12,29 +12,17 @@ public class BorrowerService extends BorrowerCommonService {
 	
 	@Transactional
 	public Borrower save(Borrower borrower) {
-		if (!beforeSave(borrower))
-			return borrower;
-		getJpaRepository().save(borrower);
-		afterSave(borrower);
-		return (borrower);
+		return super.save(borrower);
 	}
 	
 	@Transactional
-	public void deleteById(Long borrowerId) {
-		if (!beforeDeleteById(borrowerId))
-			return;
-		getJpaRepository().deleteById(borrowerId);
-		afterDeleteById(borrowerId);
+	public void delete(Borrower borrower) {
+		super.delete(borrower);
 	}
 	
 	@Transactional
-	public int update(Borrower borrower) {
-		int createdOrUpdated = 0;
-		if (findById(borrower.getBorrowerId()).isPresent())
-			createdOrUpdated = 204;
-		else
-			createdOrUpdated = 201;
-		save(borrower);
-		return createdOrUpdated;
+	public Borrower update(Borrower borrower) {
+		findByIdOrThrow(borrower.getBorrowerId());
+		return super.save(borrower);
 	}
 }
