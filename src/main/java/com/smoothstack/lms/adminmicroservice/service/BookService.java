@@ -1,8 +1,7 @@
 package com.smoothstack.lms.adminmicroservice.service;
 
-import javax.transaction.Transactional;
-
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smoothstack.lms.common.model.Book;
 import com.smoothstack.lms.common.service.BookCommonService;

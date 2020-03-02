@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -37,6 +38,7 @@ import com.smoothstack.lms.common.model.Copies;
 import com.smoothstack.lms.common.model.Genre;
 import com.smoothstack.lms.common.model.Publisher;
 
+@RequestMapping("/administrator")
 @RestController
 public class AdminController {
 
@@ -64,13 +66,13 @@ public class AdminController {
 	@Autowired
 	BorrowerService borrowerService;
 
-	@GetMapping(path = "/administrator/books")
+	@GetMapping(path = "/books")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<List<Book>> getBooks() {
 		return new ResponseEntity<List<Book>>(bookService.findAll(), HttpStatus.OK);
 	}
 
-	@GetMapping(path = "/administrator/books/{id}")
+	@GetMapping(path = "/books/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Book> getBook(@PathVariable Long id) {
 		try {
@@ -80,38 +82,79 @@ public class AdminController {
 		}
 	}
 
-	@PostMapping(path = "administrator/books")
+	@PostMapping(path = "/books")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> saveBook(@RequestBody Book book) {
-		book.setPublisher(publisherService.findByIdOrThrow(book.getPublisher().getPublisherId()));
-		book.getBookAuthorSet().forEach((Author author) -> author
-				.setAuthorName(authorService.findByIdOrThrow(author.getAuthorId()).getAuthorName()));
-		book.getBookGenreSet().forEach(
-				(Genre genre) -> genre.setGenreName(genreService.findByIdOrThrow(genre.getGenreId()).getGenreName()));
-		if (!bookService.isValid(book))
+
+		Book newBook = new Book();
+		newBook.setBookTitle(book.getBookTitle());
+		try {
+			if (book.getPublisher().getPublisherId() != 0)
+				newBook.setPublisher(publisherService.findByIdOrThrow(book.getPublisher().getPublisherId()));
+			else
+				newBook.setPublisher(book.getPublisher());
+			book.getBookAuthorSet().forEach((Author author) -> {
+				if (author.getAuthorId() != 0)
+					newBook.getBookAuthorSet().add(authorService.findByIdOrThrow(author.getAuthorId()));
+				else
+					newBook.getBookAuthorSet().add(author);
+			});
+			book.getBookGenreSet().forEach((Genre genre) -> {
+				if (genre.getGenreId() != 0)
+					newBook.getBookGenreSet().add(genreService.findByIdOrThrow(genre.getGenreId()));
+				else
+					newBook.getBookGenreSet().add(genre);
+			});
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+		if (!bookService.isValid(newBook))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-		bookService.save(book);
-		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(book.getBookId())
+		bookService.save(newBook);
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+				.buildAndExpand(newBook.getBookId()).toUri();
+		return ResponseEntity.created(location).build();
+	}
+
+	@PutMapping(path = "/books/{id}")
+	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
+	public ResponseEntity<Void> updateBook(@RequestBody Book book, @PathVariable Long id) {
+		Book newBook = new Book();
+		newBook.setBookId(book.getBookId());
+		newBook.setBookTitle(book.getBookTitle());
+		try {
+			if (book.getPublisher().getPublisherId() != 0)
+				newBook.setPublisher(publisherService.findByIdOrThrow(book.getPublisher().getPublisherId()));
+			else
+				newBook.setPublisher(book.getPublisher());
+			book.getBookAuthorSet().forEach((Author author) -> {
+				if (author.getAuthorId() != 0)
+					newBook.getBookAuthorSet().add(authorService.findByIdOrThrow(author.getAuthorId()));
+				else
+					newBook.getBookAuthorSet().add(author);
+			});
+			book.getBookGenreSet().forEach((Genre genre) -> {
+				if (genre.getGenreId() != 0)
+					newBook.getBookGenreSet().add(genreService.findByIdOrThrow(genre.getGenreId()));
+				else
+					newBook.getBookGenreSet().add(genre);
+			});
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+		}
+		if (!bookService.isValid(newBook))
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+		try {
+			bookService.update(newBook);
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(newBook.getBookId())
 				.toUri();
 		return ResponseEntity.created(location).build();
 	}
 
-	@PutMapping(path = "administrator/books/{id}")
-	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
-	public ResponseEntity<Void> updateBook(@RequestBody Book book, @PathVariable Long id) {
-		if (!bookService.isValid(book))
-			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-		try {
-			bookService.update(book);
-		} catch (RecordNotFoundException e) {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-				.buildAndExpand(book.getBookId()).toUri();
-		return ResponseEntity.created(location).build();
-	}
-
-	@DeleteMapping(path = "administrator/books/{id}")
+	@DeleteMapping(path = "/books/{id}")
 	public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
 		try {
 			bookService.delete(bookService.findByIdOrThrow(id));
@@ -123,13 +166,13 @@ public class AdminController {
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
-	@GetMapping(path = "/administrator/authors")
+	@GetMapping(path = "/authors")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<List<Author>> getAuthors() {
 		return new ResponseEntity<List<Author>>(authorService.findAll(), HttpStatus.OK);
 	}
 
-	@GetMapping(path = "/administrator/authors/{id}")
+	@GetMapping(path = "/authors/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Author> getAuthor(@PathVariable Long id) {
 		try {
@@ -139,12 +182,21 @@ public class AdminController {
 		}
 	}
 
-	@PostMapping(path = "administrator/authors")
+	@PostMapping(path = "/authors")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> saveAuthor(@RequestBody Author author) {
-		author.getAuthorBookSet().forEach((Book book) -> {
-			book = bookService.findByIdOrThrow(book.getBookId());
-		});
+		Author newAuthor = new Author();
+		newAuthor.setAuthorName(author.getAuthorName());
+		try {
+			author.getAuthorBookSet().forEach((Book book) -> {
+				if (book.getBookId() != 0)
+					newAuthor.getAuthorBookSet().add(bookService.findByIdOrThrow(book.getBookId()));
+				else
+					newAuthor.getAuthorBookSet().add(book);
+			});
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+		}
 		if (!authorService.isValid(author))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		authorService.save(author);
@@ -153,9 +205,22 @@ public class AdminController {
 		return ResponseEntity.created(location).build();
 	}
 
-	@PutMapping(path = "administrator/authors/{id}")
+	@PutMapping(path = "/authors/{id}")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> updateAuthor(@RequestBody Author author, @PathVariable Long id) {
+		Author newAuthor = new Author();
+		newAuthor.setAuthorName(author.getAuthorName());
+		newAuthor.setAuthorId(author.getAuthorId());
+		try {
+			author.getAuthorBookSet().forEach((Book book) -> {
+				if (book.getBookId() != 0)
+					newAuthor.getAuthorBookSet().add(bookService.findByIdOrThrow(book.getBookId()));
+				else
+					newAuthor.getAuthorBookSet().add(book);
+			});
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+		}
 		if (!authorService.isValid(author))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		try {
@@ -168,7 +233,7 @@ public class AdminController {
 		return ResponseEntity.created(location).build();
 	}
 
-	@DeleteMapping(path = "administrator/authors/{id}")
+	@DeleteMapping(path = "/authors/{id}")
 	public ResponseEntity<Void> deleteAuthor(@PathVariable Long id) {
 		try {
 			authorService.delete(authorService.findByIdOrThrow(id));
@@ -180,13 +245,13 @@ public class AdminController {
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
-	@GetMapping(path = "/administrator/borrowers")
+	@GetMapping(path = "/borrowers")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<List<Borrower>> getBorrowers() {
 		return new ResponseEntity<List<Borrower>>(borrowerService.findAll(), HttpStatus.OK);
 	}
 
-	@GetMapping(path = "/administrator/borrowers/{id}")
+	@GetMapping(path = "/borrowers/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Borrower> getBorrower(@PathVariable Long id) {
 		try {
@@ -196,7 +261,7 @@ public class AdminController {
 		}
 	}
 
-	@PostMapping(path = "administrator/borrowers")
+	@PostMapping(path = "/borrowers")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> saveBorrower(@RequestBody Borrower borrower) {
 		if (!borrowerService.isValid(borrower))
@@ -207,7 +272,7 @@ public class AdminController {
 		return ResponseEntity.created(location).build();
 	}
 
-	@PutMapping(path = "administrator/borrowers/{id}")
+	@PutMapping(path = "/borrowers/{id}")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> updateBorrower(@RequestBody Borrower borrower, @PathVariable Long id) {
 		if (!borrowerService.isValid(borrower))
@@ -222,7 +287,7 @@ public class AdminController {
 		return ResponseEntity.created(location).build();
 	}
 
-	@DeleteMapping(path = "administrator/borrowers/{id}")
+	@DeleteMapping(path = "/borrowers/{id}")
 	public ResponseEntity<Void> deleteBorrower(@PathVariable Long id) {
 		try {
 			borrowerService.delete(borrowerService.findByIdOrThrow(id));
@@ -234,13 +299,13 @@ public class AdminController {
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
-	@GetMapping(path = "/administrator/branches")
+	@GetMapping(path = "/branches")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<List<Branch>> getBranchs() {
 		return new ResponseEntity<List<Branch>>(branchService.findAll(), HttpStatus.OK);
 	}
 
-	@GetMapping(path = "/administrator/branches/{id}")
+	@GetMapping(path = "/branches/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Branch> getBranch(@PathVariable Long id) {
 		try {
@@ -250,7 +315,7 @@ public class AdminController {
 		}
 	}
 
-	@PostMapping(path = "administrator/branches")
+	@PostMapping(path = "/branches")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> saveBranch(@RequestBody Branch branch) {
 		if (!branchService.isValid(branch))
@@ -261,7 +326,7 @@ public class AdminController {
 		return ResponseEntity.created(location).build();
 	}
 
-	@PutMapping(path = "administrator/branches/{id}")
+	@PutMapping(path = "/branches/{id}")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> updateBranch(@RequestBody Branch branch, @PathVariable Long id) {
 		if (!branchService.isValid(branch))
@@ -276,7 +341,7 @@ public class AdminController {
 		return ResponseEntity.created(location).build();
 	}
 
-	@DeleteMapping(path = "administrator/branches/{id}")
+	@DeleteMapping(path = "/branches/{id}")
 	public ResponseEntity<Void> deleteBranch(@PathVariable Long id) {
 		try {
 			branchService.delete(branchService.findByIdOrThrow(id));
@@ -288,13 +353,13 @@ public class AdminController {
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
-	@GetMapping(path = "/administrator/copies")
+	@GetMapping(path = "/copies")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<List<Copies>> getCopiess() {
 		return new ResponseEntity<List<Copies>>(copiesService.findAll(), HttpStatus.OK);
 	}
 
-	@GetMapping(path = "/administrator/copies/BranchID/{branchId}/BookID/{bookId}")
+	@GetMapping(path = "/copies/BranchID/{branchId}/BookID/{bookId}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Copies> getCopies(@PathVariable Long branchId, @PathVariable Long bookId) {
 		try {
@@ -304,9 +369,10 @@ public class AdminController {
 		}
 	}
 
-	@PostMapping(path = "administrator/copies")
+	@PostMapping(path = "/copies")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> saveCopies(@RequestBody Copies copies) {
+			System.out.println(copies);
 		if (!copiesService.isValid(copies))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		copiesService.save(copies);
@@ -315,7 +381,7 @@ public class AdminController {
 		return ResponseEntity.created(location).build();
 	}
 
-	@PutMapping(path = "administrator/copies/BranchID/{branchId}/BookID/{bookId}")
+	@PutMapping(path = "/copies/BranchID/{branchId}/BookID/{bookId}")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> updateCopies(@RequestBody Copies copies, @PathVariable Long id) {
 		if (!copiesService.isValid(copies))
@@ -330,7 +396,7 @@ public class AdminController {
 		return ResponseEntity.created(location).build();
 	}
 
-	@DeleteMapping(path = "administrator/copies/BranchID/{branchId}/BookID/{bookId}")
+	@DeleteMapping(path = "/copies/BranchID/{branchId}/BookID/{bookId}")
 	public ResponseEntity<Void> deleteCopies(@PathVariable Long branchId, @PathVariable Long bookId) {
 		try {
 			copiesService.delete(copiesService.findByIdOrThrow(bookId, branchId));
@@ -342,13 +408,13 @@ public class AdminController {
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
-	@GetMapping(path = "/administrator/genres")
+	@GetMapping(path = "/genres")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<List<Genre>> getGenres() {
 		return new ResponseEntity<List<Genre>>(genreService.findAll(), HttpStatus.OK);
 	}
 
-	@GetMapping(path = "/administrator/genres/{id}")
+	@GetMapping(path = "/genres/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Genre> getGenre(@PathVariable Long id) {
 		try {
@@ -358,9 +424,23 @@ public class AdminController {
 		}
 	}
 
-	@PostMapping(path = "administrator/genres")
+	@PostMapping(path = "/genres")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> saveGenre(@RequestBody Genre genre) {
+		Genre newGenre = new Genre();
+		newGenre.setGenreName(genre.getGenreName());
+		try {
+			genre.getGenreBookSet().forEach((Book book) -> {
+				if (book.getBookId() != 0)
+					newGenre.getGenreBookSet().add(bookService.findByIdOrThrow(book.getBookId()));
+				else
+					newGenre.getGenreBookSet().add(book);
+			});
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+		}
+		if (!genreService.isValid(genre))
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		if (!genreService.isValid(genre))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		genreService.save(genre);
@@ -369,9 +449,24 @@ public class AdminController {
 		return ResponseEntity.created(location).build();
 	}
 
-	@PutMapping(path = "administrator/genres/{id}")
+	@PutMapping(path = "/genres/{id}")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> updateGenre(@RequestBody Genre genre, @PathVariable Long id) {
+		Genre newGenre = new Genre();
+		newGenre.setGenreName(genre.getGenreName());
+		newGenre.setGenreId(genre.getGenreId());
+		try {
+			genre.getGenreBookSet().forEach((Book book) -> {
+				if (book.getBookId() != 0)
+					newGenre.getGenreBookSet().add(bookService.findByIdOrThrow(book.getBookId()));
+				else
+					newGenre.getGenreBookSet().add(book);
+			});
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+		}
+		if (!genreService.isValid(genre))
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		if (!genreService.isValid(genre))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		try {
@@ -379,12 +474,12 @@ public class AdminController {
 		} catch (RecordNotFoundException e) {
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
-		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-				.buildAndExpand(genre.getGenreId()).toUri();
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(genre.getGenreId())
+				.toUri();
 		return ResponseEntity.created(location).build();
 	}
 
-	@DeleteMapping(path = "administrator/genres/{id}")
+	@DeleteMapping(path = "/genres/{id}")
 	public ResponseEntity<Void> deleteGenre(@PathVariable Long id) {
 		try {
 			genreService.delete(genreService.findByIdOrThrow(id));
@@ -396,13 +491,13 @@ public class AdminController {
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 
-	@GetMapping(path = "/administrator/publishers")
+	@GetMapping(path = "/publishers")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<List<Publisher>> getPublishers() {
 		return new ResponseEntity<List<Publisher>>(publisherService.findAll(), HttpStatus.OK);
 	}
 
-	@GetMapping(path = "/administrator/publishers/{id}")
+	@GetMapping(path = "/publishers/{id}")
 	@Produces({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Publisher> getPublisher(@PathVariable Long id) {
 		try {
@@ -412,9 +507,23 @@ public class AdminController {
 		}
 	}
 
-	@PostMapping(path = "administrator/publishers")
+	@PostMapping(path = "/publishers")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> savePublisher(@RequestBody Publisher publisher) {
+		Publisher newPublisher = new Publisher();
+		newPublisher.setPublisherName(publisher.getPublisherName());
+		newPublisher.setPublisherAddress(publisher.getPublisherAddress());
+		newPublisher.setPublisherPhone(publisher.getPublisherPhone());
+		try {
+			publisher.getPublisherBookSet().forEach((Book book) -> {
+				if (book.getBookId() != 0)
+					newPublisher.getPublisherBookSet().add(bookService.findByIdOrThrow(book.getBookId()));
+				else
+					newPublisher.getPublisherBookSet().add(book);
+			});
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+		}
 		if (!publisherService.isValid(publisher))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		publisherService.save(publisher);
@@ -423,9 +532,24 @@ public class AdminController {
 		return ResponseEntity.created(location).build();
 	}
 
-	@PutMapping(path = "administrator/publishers/{id}")
+	@PutMapping(path = "/publishers/{id}")
 	@Consumes({ MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public ResponseEntity<Void> updatePublisher(@RequestBody Publisher publisher, @PathVariable Long id) {
+		Publisher newPublisher = new Publisher();
+		newPublisher.setPublisherName(publisher.getPublisherName());
+		newPublisher.setPublisherId(publisher.getPublisherId());
+		newPublisher.setPublisherAddress(publisher.getPublisherAddress());
+		newPublisher.setPublisherPhone(publisher.getPublisherPhone());
+		try {
+			publisher.getPublisherBookSet().forEach((Book book) -> {
+				if (book.getBookId() != 0)
+					newPublisher.getPublisherBookSet().add(bookService.findByIdOrThrow(book.getBookId()));
+				else
+					newPublisher.getPublisherBookSet().add(book);
+			});
+		} catch (RecordNotFoundException e) {
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+		}
 		if (!publisherService.isValid(publisher))
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		try {
@@ -438,7 +562,7 @@ public class AdminController {
 		return ResponseEntity.created(location).build();
 	}
 
-	@DeleteMapping(path = "administrator/publishers/{id}")
+	@DeleteMapping(path = "/publishers/{id}")
 	public ResponseEntity<Void> deletePublisher(@PathVariable Long id) {
 		try {
 			publisherService.delete(publisherService.findByIdOrThrow(id));

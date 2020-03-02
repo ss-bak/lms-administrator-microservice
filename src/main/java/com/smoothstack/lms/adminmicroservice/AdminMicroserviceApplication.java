@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "com.smoothstack.lms.common")
-@EntityScan(basePackages = "com.smoothstack.lms.common")
+@EntityScan(basePackages = "com.smoothstack.lms.common.model")
 public class AdminMicroserviceApplication {
 
 	public static void main(String[] args) {
